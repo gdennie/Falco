@@ -32,7 +32,7 @@ let handleGreeting : HttpHandler =
 // ------------
 // Logging 
 // ------------
-let configureLogging (log : ILoggingBuilder) =
+let configureLogging (log : ILoggingBuilder) : unit =
     log.ClearProviders()
        .AddConsole()
        .SetMinimumLevel(LogLevel.Error)
@@ -41,30 +41,33 @@ let configureLogging (log : ILoggingBuilder) =
 // ------------
 // Register services
 // ------------
-let configureServices (services : IServiceCollection) =
-    services.AddFalco() |> ignore
+let configureServices (services : IServiceCollection) : unit =
+    services.AddFalco() 
+    |> ignore
 
 // ------------
 // Activate middleware
 // ------------
-let configureApp (endpoints : HttpEndpoint list) (ctx : WebHostBuilderContext) (app : IApplicationBuilder) =    
+let configureApp (endpoints : HttpEndpoint list) (ctx : WebHostBuilderContext) (app : IApplicationBuilder) : unit =    
     let devMode = StringUtils.strEquals ctx.HostingEnvironment.EnvironmentName "Development"    
     app.UseWhen(devMode, fun app -> 
             app.UseDeveloperExceptionPage())
        .UseWhen(not(devMode), fun app -> 
             app.UseFalcoExceptionHandler(Response.withStatusCode 500 >> Response.ofPlainText "Server error"))
-       .UseFalco(endpoints) |> ignore
+       .UseFalco(endpoints) 
+    |> ignore
 
 // -----------
 // Configure Host
 // -----------
-let configureHost (endpoints : HttpEndpoint list) (webhost : IWebHostBuilder) =
-    webhost.ConfigureLogging(configureLogging)
-           .ConfigureServices(configureServices)
-           .Configure(configureApp endpoints)
+let configureHost (endpoints : HttpEndpoint list) (builder : IWebHostBuilder) : IWebHostBuilder =
+    builder
+        .ConfigureLogging(configureLogging)
+        .ConfigureServices(configureServices)
+        .Configure(configureApp endpoints)
 
 [<EntryPoint>]
-let main args =    
+let main args : int =    
     webHost args {
         configure configureHost
 
